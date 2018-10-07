@@ -8,6 +8,7 @@ import (
     "time"
     "regexp"
     "strconv"
+    "strings"
     "github.com/gorilla/feeds"
 )
 
@@ -43,17 +44,27 @@ func HNBestFeed() (feedText string, err error) {
         itemTitle := string(m[2])
         itemPoint := string(m[3])
         itemAuthor := string(m[4])
-        itemBeforeDay, _ := strconv.Atoi(string(m[5]))
+        itemBeforeTime := string(m[5])
+        itemBeforeTimeUnit := string(m[6])
         itemCommentPath := string(m[7])
         itemCommentCount := string(m[8])
         itemDescription := fmt.Sprintf("%s points. <a href=\"https://news.ycombinator.com/%s\" >%s comments</a>", itemPoint, itemCommentPath, itemCommentCount)
+        created := now
+
+        if strings.Contains(itemBeforeTimeUnit, "day") {
+            day, _ := strconv.Atoi(itemBeforeTime)
+            created = now.AddDate(0, 0, -day)
+        } else if strings.Contains(itemBeforeTimeUnit, "hour") {
+            duration, _ := time.ParseDuration(fmt.Sprintf("-%sh", itemBeforeTime))
+            created = now.Add(duration)
+        }
 
         feed.Add(&feeds.Item{
             Title: string(itemTitle),
             Link: &feeds.Link{Href: itemLink},
             Description: itemDescription,
             Author: &feeds.Author{Name: itemAuthor},
-            Created: now.AddDate(0, 0, -itemBeforeDay),
+            Created: created,
         })
     }
 
