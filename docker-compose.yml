@@ -5,5 +5,5 @@ services:
     volumes:
       - ./web:/web
     ports:
-      - "127.0.0.1:10020:8080"
+      - "8080:8080"
     restart: always
