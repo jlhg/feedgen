@@ -1,0 +1,9 @@
+version: "3.7"
+services:
+  web:
+    build: .
+    volumes:
+      - ./web:/web
+    ports:
+      - "127.0.0.1:10020:8080"
+    restart: always
