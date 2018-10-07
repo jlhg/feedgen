@@ -57,6 +57,9 @@ func HNBestFeed() (feedText string, err error) {
         } else if strings.Contains(itemBeforeTimeUnit, "hour") {
             duration, _ := time.ParseDuration(fmt.Sprintf("-%sh", itemBeforeTime))
             created = now.Add(duration)
+        } else if strings.Contains(itemBeforeTimeUnit, "minute") {
+            duration, _ := time.ParseDuration(fmt.Sprintf("-%sm", itemBeforeTime))
+            created = now.Add(duration)
         }
 
         feed.Add(&feeds.Item{
