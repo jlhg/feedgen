@@ -5,4 +5,4 @@ RUN mkdir /web
 COPY ./web /web
 WORKDIR /web
 RUN go get github.com/gin-gonic/gin github.com/gorilla/feeds
-ENTRYPOINT go run main.go
+CMD go run main.go
