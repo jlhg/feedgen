@@ -48,7 +48,8 @@ func HNBestFeed() (feedText string, err error) {
         itemBeforeTimeUnit := string(m[6])
         itemCommentPath := string(m[7])
         itemCommentCount := string(m[8])
-        itemDescription := fmt.Sprintf("%s points. <a href=\"https://news.ycombinator.com/%s\" >%s comments</a>", itemPoint, itemCommentPath, itemCommentCount)
+        itemCommentLink := fmt.Sprintf("https://news.ycombinator.com/%s", itemCommentPath)
+        itemDescription := fmt.Sprintf("%s points. <a href=\"%s\" >%s comments</a>", itemPoint, itemCommentLink, itemCommentCount)
         created := now
 
         if strings.Contains(itemBeforeTimeUnit, "day") {
@@ -63,6 +64,7 @@ func HNBestFeed() (feedText string, err error) {
         }
 
         feed.Add(&feeds.Item{
+            Id: itemCommentLink,
             Title: string(itemTitle),
             Link: &feeds.Link{Href: itemLink},
             Description: itemDescription,
