@@ -11,7 +11,7 @@ type Context struct {
     *gin.Context
 }
 
-func (c *Context) setAtomHeader() {
+func (c *Context) setHeader() {
     c.Header("Content-Type", "application/atom+xml; charset=utf-8")
 }
 
@@ -20,7 +20,7 @@ func setupRouter() *gin.Engine {
 
     r.GET("/hnbest", func(context *gin.Context) {
         c := &Context{context}
-        c.setAtomHeader()
+        c.setHeader()
         feedText, err := sites.HNBestFeed()
         if err != nil {
             c.String(http.StatusServiceUnavailable, err.Error())
