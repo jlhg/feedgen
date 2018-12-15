@@ -25,7 +25,6 @@ func PttFeed(args *PttArgument) (feedText string, err error) {
         url = "https://www.ptt.cc/bbs/" + args.BoardName + "/index.html"
     } else {
         url = "https://www.ptt.cc/bbs/" + args.BoardName + "/search?q=" + args.Query
-        log.Println(url)
     }
 
     feed := feeds.Feed{
