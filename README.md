@@ -15,6 +15,7 @@ Then go to `http://localhost:8080/<site>`.
 ## Supported sites
 
 - `hnbest`: Top links on Hacker News
+- `ptt`: 批踢踢實業坊
 
 ## License
 
