@@ -29,6 +29,20 @@ func setupRouter() *gin.Engine {
         c.String(http.StatusOK, feedText)
     })
 
+    r.GET("/ptt/:boardName", func(context *gin.Context) {
+        c := &Context{context}
+        boardName := c.Param("boardName")
+        query := c.Query("q")
+        args := &sites.PttArgument{BoardName: boardName, Query: query}
+        c.setHeader()
+        feedText, err := sites.PttFeed(args)
+        if err != nil {
+            c.String(http.StatusServiceUnavailable, err.Error())
+            return
+        }
+        c.String(http.StatusOK, feedText)
+    })
+
 	return r
 }
 
