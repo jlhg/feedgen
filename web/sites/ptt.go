@@ -110,10 +110,24 @@ func fetchFeedItem(url string, ch chan *feeds.Item) {
     }
     match := re.FindSubmatch(body)
     author := string(match[1])
+    board := string(match[3])
     title := string(match[4])
     const timeForm = "Mon Jan 02 15:04:05 2006"
-    created, _ := time.Parse(timeForm, string(match[6]))
-    description := string(match[7])
+    date := string(match[6])
+    created, _ := time.Parse(timeForm, date)
+    content := string(match[7])
+    content = regexp.MustCompile(`(?s)<div class="richcontent"><blockquote.+?</script></div>`).ReplaceAllString(content, "")
+    content = regexp.MustCompile(`(?s)<div class="richcontent"><div class="resize-container"><div class="resize-content"><iframe.+</iframe></div></div></div>`).ReplaceAllString(content, "")
+    content = regexp.MustCompile(`(?s)<div class="richcontent"><img src=".+?" alt="" /></div>`).ReplaceAllString(content, "")
+    description := "<pre>"
+    if board != "" {
+        description += "看板：" + board + "\n"
+    }
+    description += "作者：" + author + "\n" + "標題：" + title + "\n"
+    if date != "" {
+        description += "時間：" + date + "\n"
+    }
+    description += content + "</pre>"
 
     ch <- &feeds.Item{
         Id: url,
