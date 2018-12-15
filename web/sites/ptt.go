@@ -112,7 +112,7 @@ func fetchFeedItem(url string, ch chan *feeds.Item) {
     author := string(match[1])
     board := string(match[3])
     title := string(match[4])
-    const timeForm = "Mon Jan 02 15:04:05 2006"
+    const timeForm = "Mon Jan 2 15:04:05 2006"
     date := string(match[6])
     created, _ := time.Parse(timeForm, date)
     content := string(match[7])
