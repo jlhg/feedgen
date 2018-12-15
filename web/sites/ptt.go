@@ -118,9 +118,9 @@ func fetchFeedItem(url string, ch chan *feeds.Item) {
 
     match := re.FindSubmatch(body)
     if match == nil {
-        match := re2.Find(body)
+        match = re2.FindSubmatch(body)
         if match != nil {
-            description = string(match)
+            description = "<pre>" + string(match[1]) + "</pre>"
         }
     } else {
         author = string(match[1])
@@ -133,7 +133,7 @@ func fetchFeedItem(url string, ch chan *feeds.Item) {
         content = regexp.MustCompile(`(?s)<div class="richcontent"><blockquote.+?</script></div>`).ReplaceAllString(content, "")
         content = regexp.MustCompile(`(?s)<div class="richcontent"><div class="resize-container"><div class="resize-content"><iframe.+</iframe></div></div></div>`).ReplaceAllString(content, "")
         content = regexp.MustCompile(`(?s)<div class="richcontent"><img src=".+?" alt="" /></div>`).ReplaceAllString(content, "")
-        description := "<pre>"
+        description = "<pre>"
         if board != "" {
             description += "看板：" + board + "\n"
         }
@@ -146,7 +146,7 @@ func fetchFeedItem(url string, ch chan *feeds.Item) {
 
     ch <- &feeds.Item{
         Id: url,
-        Title: string(title),
+        Title: title,
         Link: &feeds.Link{Href: url},
         Description: description,
         Author: &feeds.Author{Name: author},
