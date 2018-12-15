@@ -94,6 +94,7 @@ func PttFeed(args *PttArgument) (feedText string, err error) {
 
 func fetchFeedItem(url string, ch chan *feeds.Item) {
     re := regexp.MustCompile(`(?s)<div id="main-content" class="bbs-screen bbs-content"><div class="article-metaline"><span class="article-meta-tag">作者</span><span class="article-meta-value">(.+?)</span></div>(<div class="article-metaline-right"><span class="article-meta-tag">看板</span><span class="article-meta-value">(.+?)</span></div>)?<div class="article-metaline"><span class="article-meta-tag">標題</span><span class="article-meta-value">(.+?)</span></div>(<div class="article-metaline"><span class="article-meta-tag">時間</span><span class="article-meta-value">(.+?)</span></div>)?(.+?)<span class="f2">※ (發信站|編輯)`)
+    re2 := regexp.MustCompile(`(?s)class="bbs-screen bbs-content">(.+?)<span class="f2">※ (發信站|編輯)`)
     client := &http.Client{}
     cookie := http.Cookie{Name: "over18", Value: "1"}
     req, err := http.NewRequest("GET", url, nil)
@@ -108,26 +109,40 @@ func fetchFeedItem(url string, ch chan *feeds.Item) {
     if err != nil {
         return
     }
+
+    author := "null"
+    board := "null"
+    title := "null"
+    created := time.Now()
+    description := "null"
+
     match := re.FindSubmatch(body)
-    author := string(match[1])
-    board := string(match[3])
-    title := string(match[4])
-    const timeForm = "Mon Jan 2 15:04:05 2006"
-    date := string(match[6])
-    created, _ := time.Parse(timeForm, date)
-    content := string(match[7])
-    content = regexp.MustCompile(`(?s)<div class="richcontent"><blockquote.+?</script></div>`).ReplaceAllString(content, "")
-    content = regexp.MustCompile(`(?s)<div class="richcontent"><div class="resize-container"><div class="resize-content"><iframe.+</iframe></div></div></div>`).ReplaceAllString(content, "")
-    content = regexp.MustCompile(`(?s)<div class="richcontent"><img src=".+?" alt="" /></div>`).ReplaceAllString(content, "")
-    description := "<pre>"
-    if board != "" {
-        description += "看板：" + board + "\n"
+    if match == nil {
+        match := re2.Find(body)
+        if match != nil {
+            description = string(match)
+        }
+    } else {
+        author = string(match[1])
+        board = string(match[3])
+        title = string(match[4])
+        const timeForm = "Mon Jan 2 15:04:05 2006"
+        date := string(match[6])
+        created, _ = time.Parse(timeForm, date)
+        content := string(match[7])
+        content = regexp.MustCompile(`(?s)<div class="richcontent"><blockquote.+?</script></div>`).ReplaceAllString(content, "")
+        content = regexp.MustCompile(`(?s)<div class="richcontent"><div class="resize-container"><div class="resize-content"><iframe.+</iframe></div></div></div>`).ReplaceAllString(content, "")
+        content = regexp.MustCompile(`(?s)<div class="richcontent"><img src=".+?" alt="" /></div>`).ReplaceAllString(content, "")
+        description := "<pre>"
+        if board != "" {
+            description += "看板：" + board + "\n"
+        }
+        description += "作者：" + author + "\n" + "標題：" + title + "\n"
+        if date != "" {
+            description += "時間：" + date + "\n"
+        }
+        description += content + "</pre>"
     }
-    description += "作者：" + author + "\n" + "標題：" + title + "\n"
-    if date != "" {
-        description += "時間：" + date + "\n"
-    }
-    description += content + "</pre>"
 
     ch <- &feeds.Item{
         Id: url,
