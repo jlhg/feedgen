@@ -11,16 +11,19 @@ type Context struct {
     *gin.Context
 }
 
-func (c *Context) setHeader() {
-    c.Header("Content-Type", "application/atom+xml; charset=utf-8")
+func feedContentTypeMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        c.Header("Content-Type", "application/atom+xml; charset=utf-8")
+        c.Next()
+    }
 }
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
+    r.Use(feedContentTypeMiddleware())
 
     r.GET("/hnbest", func(context *gin.Context) {
         c := &Context{context}
-        c.setHeader()
         feedText, err := sites.HNBestFeed()
         if err != nil {
             c.String(http.StatusServiceUnavailable, err.Error())
@@ -34,7 +37,6 @@ func setupRouter() *gin.Engine {
         boardName := c.Param("boardName")
         query := c.Query("q")
         args := &sites.PttArgument{BoardName: boardName, Query: query}
-        c.setHeader()
         feedText, err := sites.PttFeed(args)
         if err != nil {
             c.String(http.StatusServiceUnavailable, err.Error())
