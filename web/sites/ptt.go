@@ -64,7 +64,7 @@ func PttFeed(args *PttArgument) (feedText string, err error) {
 
     for _, m := range matchGroup {
         url := "https://www.ptt.cc" + string(m[1])
-        go fetchFeedItem(url, ch)
+        go fetchPTTFeedItem(url, ch)
     }
 
     var feedItems []*feeds.Item
@@ -92,7 +92,7 @@ func PttFeed(args *PttArgument) (feedText string, err error) {
 }
 
 
-func fetchFeedItem(url string, ch chan *feeds.Item) {
+func fetchPTTFeedItem(url string, ch chan *feeds.Item) {
     re := regexp.MustCompile(`(?s)<div id="main-content" class="bbs-screen bbs-content"><div class="article-metaline"><span class="article-meta-tag">作者</span><span class="article-meta-value">(.+?)</span></div>(<div class="article-metaline-right"><span class="article-meta-tag">看板</span><span class="article-meta-value">(.+?)</span></div>)?<div class="article-metaline"><span class="article-meta-tag">標題</span><span class="article-meta-value">(.+?)</span></div>(<div class="article-metaline"><span class="article-meta-tag">時間</span><span class="article-meta-value">(.+?)</span></div>)?(.+?)<span class="f2">※ (發信站|編輯)`)
     re2 := regexp.MustCompile(`(?s)class="bbs-screen bbs-content">(.+?)<span class="f2">※ (發信站|編輯)`)
     client := &http.Client{}
