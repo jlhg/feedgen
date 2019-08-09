@@ -133,6 +133,9 @@ func fetchPTTFeedItem(url string, ch chan *feeds.Item) {
         content = regexp.MustCompile(`(?s)<div class="richcontent"><blockquote.+?</script></div>`).ReplaceAllString(content, "")
         content = regexp.MustCompile(`(?s)<div class="richcontent"><div class="resize-container"><div class="resize-content"><iframe.+</iframe></div></div></div>`).ReplaceAllString(content, "")
         content = regexp.MustCompile(`(?s)<div class="richcontent"><img src=".+?" alt="" /></div>`).ReplaceAllString(content, "")
+        content = regexp.MustCompile(`(?s)<div.+?>(.+?)</div>`).ReplaceAllString(content, "$1")
+        content = regexp.MustCompile(`(?s)<span.+?>(.+?)</span>`).ReplaceAllString(content, "$1")
+        content = regexp.MustCompile(`(?s)<a.+?>(.+?)</a>`).ReplaceAllString(content, "$1")
         description = "<pre>"
         if board != "" {
             description += "看板：" + board + "\n"
