@@ -1,19 +1,41 @@
-package sites
+package site
 
 import (
-    "net/http"
+    "fmt"
     "io/ioutil"
     "log"
-    "fmt"
-    "time"
+    "net/http"
     "regexp"
     "strconv"
     "strings"
+    "time"
+
+    "github.com/gin-gonic/gin"
     "github.com/gorilla/feeds"
+    "github.com/jlhg/feedgen"
 )
 
-// HNBestFeed ...
-func HNBestFeed() (feedText string, err error) {
+// HackerNewsRouter is a route handler for https://news.ycombinator.com/.
+func HackerNewsRouter(c *gin.Context) {
+    switch c.Param("category") {
+    case "best":
+        feedText, err := getBestFeed()
+        if err != nil {
+            log.Println(err)
+            c.String(http.StatusServiceUnavailable, err.Error())
+            return
+        }
+        c.Header("Content-Type", "application/atom+xml; charset=utf-8")
+        c.String(http.StatusOK, feedText)
+    default:
+        c.String(http.StatusNotFound, "category is not found")
+        return
+    }
+
+    return
+}
+
+func getBestFeed() (feedText string, err error) {
     now := time.Now()
     title := "Top Links | Hacker News"
     url := "https://news.ycombinator.com/best"
@@ -39,6 +61,11 @@ func HNBestFeed() (feedText string, err error) {
 
     re := regexp.MustCompile(`(?s)<td class="title"><a href="(.+?)" class="storylink">(.+?)</a>.+?<span class="score" id=".+?">(\d+?) points</span>.+?by <a href=".+?" class="hnuser">(.+?)</a>.+?(\d+?) (days?|hours?|minutes?) ago.+?<a href="(.+?)">(\d+?)&nbsp;comments</a>`)
     matchGroup := re.FindAllSubmatch(body, -1)
+    if len(matchGroup) == 0 {
+        err = &feedgen.ArticleLinkFetchError{url}
+        return
+    }
+
     for _, m := range matchGroup {
         itemLink := string(m[1])
         itemTitle := string(m[2])
@@ -74,9 +101,6 @@ func HNBestFeed() (feedText string, err error) {
     }
 
     feedText, err = feed.ToAtom()
-    if err != nil {
-        log.Fatal(err)
-    }
 
     return
 }

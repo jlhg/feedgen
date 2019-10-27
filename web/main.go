@@ -1,55 +1,62 @@
 package main
 
 import (
-    "net/http"
+    "io"
+    "log"
+    "os"
+    "path"
+
     "github.com/gin-gonic/gin"
-    "./sites"
+
+    "github.com/jlhg/feedgen/site"
 )
 
-// Context ...
-type Context struct {
-    *gin.Context
-}
-
-func feedContentTypeMiddleware() gin.HandlerFunc {
+func cache() gin.HandlerFunc {
     return func(c *gin.Context) {
-        c.Header("Content-Type", "application/atom+xml; charset=utf-8")
-        c.Next()
+        // TODO
     }
 }
 
-func setupRouter() *gin.Engine {
+func setRouter() *gin.Engine {
 	r := gin.Default()
-    r.Use(feedContentTypeMiddleware())
+    r.Use(cache())
 
-    r.GET("/hnbest", func(context *gin.Context) {
-        c := &Context{context}
-        feedText, err := sites.HNBestFeed()
-        if err != nil {
-            c.String(http.StatusServiceUnavailable, err.Error())
-            return
-        }
-        c.String(http.StatusOK, feedText)
-    })
-
-    r.GET("/ptt/:boardName", func(context *gin.Context) {
-        c := &Context{context}
-        boardName := c.Param("boardName")
-        query := c.Query("q")
-        args := &sites.PttArgument{BoardName: boardName, Query: query}
-        feedText, err := sites.PttFeed(args)
-        if err != nil {
-            c.String(http.StatusServiceUnavailable, err.Error())
-            return
-        }
-        c.String(http.StatusOK, feedText)
-    })
+    r.GET("/hackernews/:category", site.HackerNewsRouter)
+    r.GET("/ptt/:boardName", site.PttRouter)
 
 	return r
 }
 
+func setLogger() {
+    gin.DisableConsoleColor()
+
+    var fileName string
+    if os.Getenv("GIN_MODE") == "release" {
+        fileName = "production.log"
+    } else {
+        fileName = "development.log"
+    }
+
+    dir := "log"
+    filePath := path.Join("log", fileName)
+
+    if _, err := os.Stat(dir); os.IsNotExist(err) {
+        if err := os.Mkdir(dir, os.ModePerm); err != nil {
+            panic(err)
+        }
+    }
+
+    f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err != nil {
+        panic(err)
+    }
+
+    gin.DefaultWriter = io.MultiWriter(f)
+    log.SetOutput(gin.DefaultWriter)
+}
+
 func main() {
-	r := setupRouter()
-	// Listen and Server in 0.0.0.0:8080
+    setLogger()
+	r := setRouter()
 	r.Run()
 }

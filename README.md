@@ -1,10 +1,10 @@
 # feedgen
 
-Convert website content to Feed.
+Convert website content to RSS Feed.
 
-## Getting started
+## Getting Started
 
-Start the web app by Docker Compose:
+Start the web app by docker-compose:
 
 ```
 docker-compose up -d
@@ -12,9 +12,9 @@ docker-compose up -d
 
 Then go to `http://localhost:8080/<site>`.
 
-## Supported sites
+## Supported Sites
 
-- `hnbest`: Top links on Hacker News
+- `hackernews`: Top links on Hacker News
 - `ptt`: 批踢踢實業坊
 
 ## License

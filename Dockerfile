@@ -1,8 +1,10 @@
-FROM golang:1.11
-MAINTAINER Jian-Long Huang
+FROM golang:1.13
+MAINTAINER Jian-Long Huang <huang@jianlong.org>
 EXPOSE 8080
-RUN mkdir /web
-COPY ./web /web
-WORKDIR /web
-RUN go get github.com/gin-gonic/gin github.com/gorilla/feeds
-CMD go run main.go
+ENV LANG=C.UTF-8
+ENV GIN_MODE=release
+RUN mkdir /app
+COPY . /app
+WORKDIR /app
+RUN make
+CMD ./bin/webserver

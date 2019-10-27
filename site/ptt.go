@@ -1,4 +1,4 @@
-package sites
+package site
 
 import (
     "net/http"
@@ -7,24 +7,38 @@ import (
     "fmt"
     "time"
     "regexp"
+
+    "github.com/gin-gonic/gin"
     "github.com/gorilla/feeds"
+
+    "github.com/jlhg/feedgen"
 )
 
-// PttArgument ...
-type PttArgument struct {
-    BoardName string
-    Query string
+// PttRouter is a route handler for https://www.ptt.cc/index.html.
+func PttRouter(c *gin.Context) {
+    boardName := c.Param("boardName")
+    query := c.Query("q")
+    feedText, err := getPttFeedText(boardName, query)
+    if err != nil {
+        log.Println(err)
+        c.String(http.StatusServiceUnavailable, err.Error())
+        return
+    }
+
+    c.Header("Content-Type", "application/atom+xml; charset=utf-8")
+    c.String(http.StatusOK, feedText)
+
+    return
 }
 
-// PttFeed ...
-func PttFeed(args *PttArgument) (feedText string, err error) {
+func getPttFeedText(boardName string, query string) (feedText string, err error) {
     now := time.Now()
-    title := fmt.Sprintf("批踢踢實業坊 %s 板", args.BoardName)
+    title := fmt.Sprintf("批踢踢實業坊 %s 板", boardName)
     var url string
-    if args.Query == "" {
-        url = "https://www.ptt.cc/bbs/" + args.BoardName + "/index.html"
+    if query == "" {
+        url = "https://www.ptt.cc/bbs/" + boardName + "/index.html"
     } else {
-        url = "https://www.ptt.cc/bbs/" + args.BoardName + "/search?q=" + args.Query
+        url = "https://www.ptt.cc/bbs/" + boardName + "/search?q=" + query
     }
 
     feed := feeds.Feed{
@@ -57,27 +71,26 @@ func PttFeed(args *PttArgument) (feedText string, err error) {
         match = body
     }
 
-    re = regexp.MustCompile(fmt.Sprintf(`<a href="(/bbs/%s/M\..+?\.html)">`, args.BoardName))
+    re = regexp.MustCompile(fmt.Sprintf(`<a href="(/bbs/%s/M\..+?\.html)">`, boardName))
     matchGroup := re.FindAllSubmatch(match, -1)
     feedItemsCount := len(matchGroup)
-    ch := make(chan *feeds.Item)
-
-    for _, m := range matchGroup {
-        url := "https://www.ptt.cc" + string(m[1])
-        go fetchPTTFeedItem(url, ch)
+    if feedItemsCount == 0 {
+        err = &feedgen.ArticleLinkFetchError{url}
+        return
     }
 
     var feedItems []*feeds.Item
-    count := 0
-    for feedItem := range ch {
-        count++
-        feedItems = append(feedItems, feedItem)
-        if count >= feedItemsCount {
-            break
+    for _, m := range matchGroup {
+        url := "https://www.ptt.cc" + string(m[1])
+
+        var feedItem *feeds.Item
+        feedItem, err = getPttArticleFeedItem(url)
+        if err != nil {
+            return
         }
+
+        feedItems = append(feedItems, feedItem)
     }
-    close(ch)
-    SortFeedItemsLatestFirst(feedItems)
 
     for _, feedItem := range feedItems {
         feed.Add(feedItem)
@@ -92,7 +105,7 @@ func PttFeed(args *PttArgument) (feedText string, err error) {
 }
 
 
-func fetchPTTFeedItem(url string, ch chan *feeds.Item) {
+func getPttArticleFeedItem(url string) (feedItem *feeds.Item, err error) {
     re := regexp.MustCompile(`(?s)<div id="main-content" class="bbs-screen bbs-content"><div class="article-metaline"><span class="article-meta-tag">作者</span><span class="article-meta-value">(.+?)</span></div>(<div class="article-metaline-right"><span class="article-meta-tag">看板</span><span class="article-meta-value">(.+?)</span></div>)?<div class="article-metaline"><span class="article-meta-tag">標題</span><span class="article-meta-value">(.+?)</span></div>(<div class="article-metaline"><span class="article-meta-tag">時間</span><span class="article-meta-value">(.+?)</span></div>)?(.+?)<span class="f2">※ (發信站|編輯)`)
     re2 := regexp.MustCompile(`(?s)class="bbs-screen bbs-content">(.+?)<span class="f2">※ (發信站|編輯)`)
     client := &http.Client{}
@@ -119,9 +132,11 @@ func fetchPTTFeedItem(url string, ch chan *feeds.Item) {
     match := re.FindSubmatch(body)
     if match == nil {
         match = re2.FindSubmatch(body)
-        if match != nil {
-            description = "<pre>" + string(match[1]) + "</pre>"
+        if match == nil {
+            err = &feedgen.ArticleContentFetchError{url}
+            return
         }
+        description = "<pre>" + string(match[1]) + "</pre>"
     } else {
         author = string(match[1])
         board = string(match[3])
@@ -147,7 +162,7 @@ func fetchPTTFeedItem(url string, ch chan *feeds.Item) {
         description += content + "</pre>"
     }
 
-    ch <- &feeds.Item{
+    feedItem = &feeds.Item{
         Id: url,
         Title: title,
         Link: &feeds.Link{Href: url},
@@ -155,4 +170,6 @@ func fetchPTTFeedItem(url string, ch chan *feeds.Item) {
         Author: &feeds.Author{Name: author},
         Created: created,
     }
+
+    return
 }
