@@ -16,6 +16,7 @@ Then go to `http://localhost:8080/<site>`.
 
 - `hackernews`: Top links on Hacker News
 - `ptt`: 批踢踢實業坊
+- `gamer_forum`: 巴哈姆特-哈拉區
 
 ## License
 

@@ -3,6 +3,7 @@ module github.com/jlhg/feedgen
 go 1.13
 
 require (
+	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gin-gonic/gin v1.4.0
 	github.com/gorilla/feeds v1.1.1

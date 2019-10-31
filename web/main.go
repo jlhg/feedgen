@@ -23,6 +23,7 @@ func setRouter() *gin.Engine {
 
     r.GET("/hackernews/:category", site.HackerNewsRouter)
     r.GET("/ptt/:boardName", site.PttRouter)
+    r.GET("/gamer_forum/:bsn", site.GamerForumRouter)
 
 	return r
 }
