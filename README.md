@@ -14,9 +14,14 @@ Then go to `http://localhost:8080/<site>`.
 
 ## Supported Sites
 
-- `hackernews`: Top links on Hacker News
+- `hackernews`: Hacker News
+    - Top link: https://feedgen.org/hackernews/best
 - `ptt`: 批踢踢實業坊
+    - 八卦版：https://feedgen.org/ptt/Gossiping
+    - 表特版 (20 推以上): https://feedgen.org/ptt/Beauty?q=recommend:30
 - `gamer_forum`: 巴哈姆特-哈拉區
+    - 場外休憩區：https://feedgen.org/gamer_forum/60076
+    - 魔物獵人 (20 推以上)：https://feedgen.org/gamer_forum/5786?gp=20
 
 ## License
 
