@@ -12,7 +12,7 @@ docker-compose up -d
 
 Then go to `http://localhost:8080/<site>`.
 
-## Supported Sites
+## Supported Sites and Examples
 
 - `hackernews`: Hacker News
     - Top link: https://feedgen.org/hackernews/best
