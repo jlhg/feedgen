@@ -1,25 +1,78 @@
 package main
 
 import (
+    "bytes"
+    "net/http"
     "io"
     "log"
     "os"
     "path"
+    "strconv"
+    "time"
 
     "github.com/gin-gonic/gin"
+    "github.com/go-redis/redis/v7"
 
     "github.com/jlhg/feedgen/site"
 )
 
-func cache() gin.HandlerFunc {
+type bodyLogWriter struct {
+	gin.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (w bodyLogWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
+}
+
+func (w bodyLogWriter) WriteString(s string) (int, error) {
+    w.body.WriteString(s)
+    return w.ResponseWriter.WriteString(s)
+}
+
+func cache(client *redis.Client) gin.HandlerFunc {
     return func(c *gin.Context) {
-        // TODO
+        blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
+        c.Writer = blw
+
+        reqURL := c.Request.URL.String()
+        feedText, err := client.Get(reqURL).Result()
+        if err == nil {
+            c.Header("Content-Type", "application/atom+xml; charset=utf-8")
+            c.String(http.StatusOK, feedText)
+            c.Abort()
+            return
+        }
+
+        c.Next()
+        log.Println(blw.body.String())
+        if c.Writer.Status() == http.StatusOK {
+            log.Println("success")
+            err := client.Set(reqURL, blw.body.String(), time.Minute).Err()
+            if err != nil {
+                panic(err)
+            }
+        }
     }
 }
 
 func setRouter() *gin.Engine {
 	r := gin.Default()
-    r.Use(cache())
+    redisHost := os.Getenv("FG_REDIS_HOST")
+    redisPassword := os.Getenv("FG_REDIS_PASSWORD")
+    redisDB := 0
+    if redisDBString := os.Getenv("FG_REDIS_DB"); redisDBString != "" {
+        var err error
+        redisDB, err = strconv.Atoi(redisDBString)
+        if err != nil {
+            panic(err)
+        }
+    }
+    if redisHost != "" {
+        client := redis.NewClient(&redis.Options{Addr: redisHost, Password: redisPassword, DB: redisDB})
+        r.Use(cache(client))
+    }
 
     r.GET("/hackernews/:category", site.HackerNewsRouter)
     r.GET("/ptt/:boardName", site.PttRouter)
