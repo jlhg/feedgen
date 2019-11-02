@@ -74,8 +74,10 @@ func getGamerForumFeedText(bsn string, gp string) (feedText string, err error) {
         Created: now,
     }
 
+    tnumPatt := regexp.MustCompile(`&tnum=\d+?`)
     doc.Find("[class=\"b-list__row b-list-item b-imglist-item\"]").Each(func(i int, s *goquery.Selection) {
         itemID, _ := s.Find(".b-list__main__title").Attr("href")
+        itemID = tnumPatt.ReplaceAllString(itemID, "")
         itemTitle := s.Find(".b-list__main__title").Text()
         itemContent := s.Find(".b-list__brief").Text()
         itemAuthor := s.Find(".b-list__count__user > a").Text()
