@@ -46,9 +46,8 @@ func cache(client *redis.Client) gin.HandlerFunc {
         }
 
         c.Next()
-        log.Println(blw.body.String())
+
         if c.Writer.Status() == http.StatusOK {
-            log.Println("success")
             err := client.Set(reqURL, blw.body.String(), time.Minute).Err()
             if err != nil {
                 panic(err)
