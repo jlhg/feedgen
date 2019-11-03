@@ -8,8 +8,10 @@ import (
     "os"
     "path"
     "strconv"
+    "strings"
     "time"
 
+    "github.com/gorilla/feeds"
     "github.com/gin-gonic/gin"
     "github.com/go-redis/redis/v7"
 
@@ -69,11 +71,15 @@ func route(p feedgen.Parser) gin.HandlerFunc {
 
         c.Header("Content-Type", "application/atom+xml; charset=utf-8")
 
-        if len(feed.Items) == 0 {
-            errMsg := "feed item is not found"
-            log.Println(errMsg)
-            c.String(http.StatusBadRequest, errMsg)
-            return
+        searchTkeyword := c.Query("search:tkeyword")
+        var newFeedItems []*feeds.Item
+        if searchTkeyword != "" {
+            for _, item := range feed.Items {
+                if strings.Contains(item.Title, searchTkeyword) {
+                    newFeedItems = append(newFeedItems, item)
+                }
+            }
+            feed.Items = newFeedItems
         }
 
         feedText, err := feed.ToAtom()
