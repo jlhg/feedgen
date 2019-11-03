@@ -3,43 +3,42 @@ package site
 import (
     "fmt"
     "io/ioutil"
-    "log"
     "net/http"
     "regexp"
     "strconv"
     "strings"
     "time"
 
-    "github.com/gin-gonic/gin"
     "github.com/gorilla/feeds"
+
     "github.com/jlhg/feedgen"
 )
 
-// HackerNewsRouter is a route handler for https://news.ycombinator.com/.
-func HackerNewsRouter(c *gin.Context) {
-    switch c.Param("category") {
+// HackernewsParser is a parser for Hacker News (https://news.ycombinator.com/).
+type HackernewsParser struct {}
+
+// GetFeed returns generated feed with the given query parameters.
+func (parser HackernewsParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed, err error) {
+    category := query.Get("category")
+    switch category {
     case "best":
-        feedText, err := getBestFeed()
-        if err != nil {
-            log.Println(err)
-            c.String(http.StatusServiceUnavailable, err.Error())
-            return
-        }
-        c.Header("Content-Type", "application/atom+xml; charset=utf-8")
-        c.String(http.StatusOK, feedText)
+        feed, err = parser.GetBestFeed()
+    case "":
+        err = &feedgen.ParameterNotFoundError{"category"}
     default:
-        c.String(http.StatusNotFound, "category is not found")
+        err = &feedgen.ParameterValueInvalidError{"category"}
         return
     }
 
     return
 }
 
-func getBestFeed() (feedText string, err error) {
+// GetBestFeed returns generated feed with best category.
+func (parser HackernewsParser) GetBestFeed() (feed *feeds.Feed, err error) {
     now := time.Now()
     title := "Top Links | Hacker News"
     url := "https://news.ycombinator.com/best"
-    feed := feeds.Feed{
+    feed = &feeds.Feed{
         Title: title,
         Link: &feeds.Link{Href: url},
         Description: "",
@@ -62,7 +61,7 @@ func getBestFeed() (feedText string, err error) {
     re := regexp.MustCompile(`(?s)<td class="title"><a href="(.+?)" class="storylink">(.+?)</a>.+?<span class="score" id=".+?">(\d+?) points</span>.+?by <a href=".+?" class="hnuser">(.+?)</a>.+?(\d+?) (days?|hours?|minutes?) ago.+?<a href="(.+?)">(\d+?)&nbsp;comments</a>`)
     matchGroup := re.FindAllSubmatch(body, -1)
     if len(matchGroup) == 0 {
-        err = &feedgen.ArticleLinkFetchError{url}
+        err = &feedgen.ItemFetchError{url}
         return
     }
 
@@ -99,8 +98,6 @@ func getBestFeed() (feedText string, err error) {
             Created: created,
         })
     }
-
-    feedText, err = feed.ToAtom()
 
     return
 }

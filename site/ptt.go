@@ -1,47 +1,40 @@
 package site
 
 import (
-    "net/http"
+    "fmt"
     "io/ioutil"
     "log"
-    "fmt"
-    "time"
+    "net/http"
     "regexp"
+    "time"
 
-    "github.com/gin-gonic/gin"
     "github.com/gorilla/feeds"
 
     "github.com/jlhg/feedgen"
 )
 
-// PttRouter is a route handler for https://www.ptt.cc/index.html.
-func PttRouter(c *gin.Context) {
-    boardName := c.Param("boardName")
-    query := c.Query("q")
-    feedText, err := getPttFeedText(boardName, query)
-    if err != nil {
-        log.Println(err)
-        c.String(http.StatusServiceUnavailable, err.Error())
+// PttParser is a parser for PTT Web (https://www.ptt.cc/bbs/index.html).
+type PttParser struct {}
+
+// GetFeed returns generated feed with the given query parameters.
+func (parser PttParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed, err error) {
+    now := time.Now()
+    boardName := query.Get("b")
+    if boardName == "" {
+        err = &feedgen.ParameterNotFoundError{"b"}
         return
     }
 
-    c.Header("Content-Type", "application/atom+xml; charset=utf-8")
-    c.String(http.StatusOK, feedText)
-
-    return
-}
-
-func getPttFeedText(boardName string, query string) (feedText string, err error) {
-    now := time.Now()
+    q := query.Get("q")
     title := fmt.Sprintf("批踢踢實業坊 %s 板", boardName)
     var url string
-    if query == "" {
+    if q == "" {
         url = "https://www.ptt.cc/bbs/" + boardName + "/index.html"
     } else {
-        url = "https://www.ptt.cc/bbs/" + boardName + "/search?q=" + query
+        url = "https://www.ptt.cc/bbs/" + boardName + "/search?q=" + q
     }
 
-    feed := feeds.Feed{
+    feed = &feeds.Feed{
         Title: title,
         Link: &feeds.Link{Href: url},
         Description: "",
@@ -75,7 +68,7 @@ func getPttFeedText(boardName string, query string) (feedText string, err error)
     matchGroup := re.FindAllSubmatch(match, -1)
     feedItemsCount := len(matchGroup)
     if feedItemsCount == 0 {
-        err = &feedgen.ArticleLinkFetchError{url}
+        err = &feedgen.ItemFetchError{url}
         return
     }
 
@@ -84,9 +77,9 @@ func getPttFeedText(boardName string, query string) (feedText string, err error)
         url := "https://www.ptt.cc" + string(m[1])
 
         var feedItem *feeds.Item
-        feedItem, err = getPttArticleFeedItem(url)
+        feedItem, err = parser.GetFeedItem(url)
         if err != nil {
-            return
+            continue
         }
 
         feedItems = append(feedItems, feedItem)
@@ -96,18 +89,14 @@ func getPttFeedText(boardName string, query string) (feedText string, err error)
         feed.Add(feedItem)
     }
 
-    feedText, err = feed.ToAtom()
-    if err != nil {
-        log.Fatal(err)
-    }
-
     return
 }
 
-
-func getPttArticleFeedItem(url string) (feedItem *feeds.Item, err error) {
+// GetFeedItem returns feed item generated from item URL.
+func (parser PttParser) GetFeedItem(url string) (feedItem *feeds.Item, err error) {
     re := regexp.MustCompile(`(?s)<div id="main-content" class="bbs-screen bbs-content"><div class="article-metaline"><span class="article-meta-tag">作者</span><span class="article-meta-value">(.+?)</span></div>(<div class="article-metaline-right"><span class="article-meta-tag">看板</span><span class="article-meta-value">(.+?)</span></div>)?<div class="article-metaline"><span class="article-meta-tag">標題</span><span class="article-meta-value">(.+?)</span></div>(<div class="article-metaline"><span class="article-meta-tag">時間</span><span class="article-meta-value">(.+?)</span></div>)?(.+?)<span class="f2">※ (發信站|編輯)`)
     re2 := regexp.MustCompile(`(?s)class="bbs-screen bbs-content">(.+?)<span class="f2">※ (發信站|編輯)`)
+    re3 := regexp.MustCompile(`404 - Not Found`)
     client := &http.Client{}
     cookie := http.Cookie{Name: "over18", Value: "1"}
     req, err := http.NewRequest("GET", url, nil)
@@ -133,7 +122,13 @@ func getPttArticleFeedItem(url string) (feedItem *feeds.Item, err error) {
     if match == nil {
         match = re2.FindSubmatch(body)
         if match == nil {
-            err = &feedgen.ArticleContentFetchError{url}
+            match = re3.FindSubmatch(body)
+            if match == nil {
+                log.Println(err.Error())
+                err = &feedgen.PageContentFetchError{url}
+            } else {
+                err = &feedgen.PageContentNotFoundError{url}
+            }
             return
         }
         description = "<pre>" + string(match[1]) + "</pre>"

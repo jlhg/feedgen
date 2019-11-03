@@ -13,6 +13,7 @@ import (
     "github.com/gin-gonic/gin"
     "github.com/go-redis/redis/v7"
 
+    "github.com/jlhg/feedgen"
     "github.com/jlhg/feedgen/site"
 )
 
@@ -56,6 +57,37 @@ func cache(client *redis.Client) gin.HandlerFunc {
     }
 }
 
+func route(p feedgen.Parser) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        feed, err := p.GetFeed(c.Request.URL.Query())
+        if err != nil {
+            errMsg := err.Error()
+            log.Println(errMsg)
+            c.String(http.StatusBadRequest, errMsg)
+            return
+        }
+
+        c.Header("Content-Type", "application/atom+xml; charset=utf-8")
+
+        if len(feed.Items) == 0 {
+            errMsg := "feed item is not found"
+            log.Println(errMsg)
+            c.String(http.StatusBadRequest, errMsg)
+            return
+        }
+
+        feedText, err := feed.ToAtom()
+        if err != nil {
+            errMsg := err.Error()
+            log.Println(errMsg)
+            c.String(http.StatusInternalServerError, errMsg)
+            return
+        }
+
+        c.String(http.StatusOK, feedText)
+    }
+}
+
 func setRouter() *gin.Engine {
 	r := gin.Default()
     redisHost := os.Getenv("FG_REDIS_HOST")
@@ -76,9 +108,10 @@ func setRouter() *gin.Engine {
     r.GET("/", func(c *gin.Context) {
         c.Redirect(http.StatusTemporaryRedirect, "https://github.com/jlhg/feedgen")
     })
-    r.GET("/hackernews/:category", site.HackerNewsRouter)
-    r.GET("/ptt/:boardName", site.PttRouter)
-    r.GET("/gamer_forum/:bsn", site.GamerForumRouter)
+
+    r.GET("/ptt", route(&site.PttParser{}))
+    r.GET("/hackernews", route(&site.HackernewsParser{}))
+    r.GET("/gamer_forum", route(&site.GamerForumParser{}))
 
 	return r
 }

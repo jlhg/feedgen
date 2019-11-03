@@ -2,46 +2,40 @@ package site
 
 import (
     "net/http"
-    "log"
     "fmt"
     "time"
     "regexp"
 
-    "github.com/gin-gonic/gin"
     "github.com/gorilla/feeds"
     "github.com/PuerkitoBio/goquery"
+
+    "github.com/jlhg/feedgen"
 )
 
-// GamerForumRouter is a route handler for https://forum.gamer.com.tw/.
-func GamerForumRouter(c *gin.Context) {
-    bsn := c.Param("bsn")
-    if matched, _ := regexp.MatchString(`^\d+$`, bsn); !matched {
-        c.String(http.StatusBadRequest, "bsn has invalid value")
+// GamerForumParser is a parser for Gamer Forum (https://forum.gamer.com.tw/).
+type GamerForumParser struct {}
+
+// GetFeed returns generated feed with the given query parameters.
+func (parser GamerForumParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed, err error) {
+    bsn := query.Get("bsn")
+    if bsn == "" {
+        err = &feedgen.ParameterNotFoundError{"bsn"}
         return
     }
 
-    gp := c.Query("gp")
+    if matched, _ := regexp.MatchString(`^\d+$`, bsn); !matched {
+        err = &feedgen.ParameterValueInvalidError{"bsn"}
+        return
+    }
+
+    gp := query.Get("gp")
     if gp != "" {
         if matched, _ := regexp.MatchString(`^5|20|50|100|200$`, gp); !matched {
-            c.String(http.StatusBadRequest, "gp has invalid value")
+            err = &feedgen.ParameterValueInvalidError{"gp"}
             return
         }
     }
 
-    feedText, err := getGamerForumFeedText(bsn, gp)
-    if err != nil {
-        log.Println(err)
-        c.String(http.StatusServiceUnavailable, err.Error())
-        return
-    }
-
-    c.Header("Content-Type", "application/atom+xml; charset=utf-8")
-    c.String(http.StatusOK, feedText)
-
-    return
-}
-
-func getGamerForumFeedText(bsn string, gp string) (feedText string, err error) {
     now := time.Now()
     url := fmt.Sprintf("https://forum.gamer.com.tw/B.php?bsn=%s", bsn)
     if gp != "" {
@@ -66,7 +60,7 @@ func getGamerForumFeedText(bsn string, gp string) (feedText string, err error) {
     title := doc.Find("head > title").Text()
     description, _ := doc.Find(`meta[name="Description"]`).Attr("content")
 
-    feed := feeds.Feed{
+    feed = &feeds.Feed{
         Title: title,
         Link: &feeds.Link{Href: url},
         Description: description,
@@ -75,7 +69,13 @@ func getGamerForumFeedText(bsn string, gp string) (feedText string, err error) {
     }
 
     tnumPatt := regexp.MustCompile(`&tnum=\d+?`)
-    doc.Find("[class=\"b-list__row b-list-item b-imglist-item\"]").Each(func(i int, s *goquery.Selection) {
+    itemDoc := doc.Find("[class=\"b-list__row b-list-item b-imglist-item\"]")
+    if itemDoc.Length() == 0 {
+        err = &feedgen.ItemFetchError{url}
+        return
+    }
+
+    itemDoc.Each(func(i int, s *goquery.Selection) {
         itemID, _ := s.Find(".b-list__main__title").Attr("href")
         itemID = tnumPatt.ReplaceAllString(itemID, "")
         itemTitle := s.Find(".b-list__main__title").Text()
@@ -107,11 +107,6 @@ func getGamerForumFeedText(bsn string, gp string) (feedText string, err error) {
             Created: itemCreated,
         })
     })
-
-    feedText, err = feed.ToAtom()
-    if err != nil {
-        log.Fatal(err)
-    }
 
     return
 }
