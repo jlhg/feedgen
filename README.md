@@ -1,16 +1,6 @@
 # feedgen
 
-Convert website content to RSS Feed.
-
-## Getting Started
-
-Start the web app by docker-compose:
-
-```
-docker-compose up -d
-```
-
-Then go to `http://localhost:8080/<site>`.
+A middleware to generate Atom feeds from websites. https://feedgen.org
 
 ## Supported Sites and Examples
 
@@ -22,6 +12,16 @@ Then go to `http://localhost:8080/<site>`.
 - `gamer_forum`: 巴哈姆特-哈拉區
     - 場外休憩區：https://feedgen.org/gamer_forum/60076
     - 魔物獵人 (20 推以上)：https://feedgen.org/gamer_forum/5786?gp=20
+
+## Getting Started
+
+Start the web by docker-compose:
+
+```
+docker-compose up -d
+```
+
+It's on `http://localhost:8080`.
 
 ## License
 
