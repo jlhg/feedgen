@@ -73,6 +73,9 @@ func setRouter() *gin.Engine {
         r.Use(cache(client))
     }
 
+    r.GET("/", func(c *gin.Context) {
+        c.Redirect(http.StatusTemporaryRedirect, "https://github.com/jlhg/feedgen")
+    })
     r.GET("/hackernews/:category", site.HackerNewsRouter)
     r.GET("/ptt/:boardName", site.PttRouter)
     r.GET("/gamer_forum/:bsn", site.GamerForumRouter)
