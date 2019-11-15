@@ -11,7 +11,7 @@ A middleware to generate Atom feeds from websites. https://feedgen.org
     - 表特版 (30 推以上): https://feedgen.org/ptt?b=Beauty&q=recommend:30
 - `gamer_forum`: 巴哈姆特-哈拉區
     - 場外休憩區：https://feedgen.org/gamer_forum?bsn=60076
-    - 魔物獵人 (20 推以上)：https://feedgen.org/gamer_forum?bsn=5786?gp=20
+    - 魔物獵人 (20 推以上)：https://feedgen.org/gamer_forum?bsn=5786&gp=20
 
 ## Getting Started
 
