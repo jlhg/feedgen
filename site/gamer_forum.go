@@ -86,17 +86,17 @@ func (parser GamerForumParser) GetFeed(query feedgen.QueryValues) (feed *feeds.F
             itemContent = "(沒有內容)"
         }
 
-        doc, err := goquery.NewDocument(itemLink)
-        if err != nil {
-            return
-        }
+        // doc, err := goquery.NewDocument(itemLink)
+        // if err != nil {
+        //     return
+        // }
 
-        dt, _ := doc.Find(".edittime.tippy-post-info").Attr("data-mtime")
-        layout := "2006-01-02 15:04:05"
-        itemCreated, err := time.Parse(layout, dt)
-        if err != nil {
-            return
-        }
+        // dt, _ := doc.Find(".edittime.tippy-post-info").Attr("data-mtime")
+        // layout := "2006-01-02 15:04:05"
+        // itemCreated, err := time.Parse(layout, dt)
+        // if err != nil {
+        //     return
+        // }
 
         feed.Add(&feeds.Item{
             Id: itemID,
@@ -104,7 +104,7 @@ func (parser GamerForumParser) GetFeed(query feedgen.QueryValues) (feed *feeds.F
             Link: &feeds.Link{Href: itemLink},
             Description: itemContent,
             Author: &feeds.Author{Name: itemAuthor},
-            Created: itemCreated,
+            Created: now,
         })
     })
 
