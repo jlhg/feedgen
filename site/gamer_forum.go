@@ -46,6 +46,7 @@ func (parser GamerForumParser) GetFeed(query feedgen.QueryValues) (feed *feeds.F
     cookie := http.Cookie{Name: "ckForumListOrder", Value: "post"}
     req, err := http.NewRequest("GET", url, nil)
     req.AddCookie(&cookie)
+	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36")
     resp, err := client.Do(req)
     if err != nil {
         return
