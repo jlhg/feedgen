@@ -69,7 +69,7 @@ func (parser GamerForumParser) GetFeed(query feedgen.QueryValues) (feed *feeds.F
         Created: now,
     }
 
-    tnumPatt := regexp.MustCompile(`&tnum=\d+?`)
+    tnumPatt := regexp.MustCompile(`&tnum=\d+`)
     itemDoc := doc.Find("[class=\"b-list__row b-list-item b-imglist-item\"]")
     if itemDoc.Length() == 0 {
         err = &feedgen.ItemFetchError{url}
