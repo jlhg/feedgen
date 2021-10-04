@@ -1,5 +1,5 @@
-FROM golang:1.13
-MAINTAINER Jian-Long Huang <huang@jianlong.org>
+FROM golang:1.17.1
+MAINTAINER Jian-Long Huang <contact@jianlong.org>
 EXPOSE 8080
 ENV LANG=C.UTF-8
 ENV GIN_MODE=release

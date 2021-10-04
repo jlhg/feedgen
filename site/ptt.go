@@ -3,7 +3,6 @@ package site
 import (
     "fmt"
     "io/ioutil"
-    "log"
     "net/http"
     "regexp"
     "time"
@@ -124,14 +123,16 @@ func (parser PttParser) GetFeedItem(url string) (feedItem *feeds.Item, err error
         if match == nil {
             match = re3.FindSubmatch(body)
             if match == nil {
-                log.Println(err.Error())
-                err = &feedgen.PageContentFetchError{url}
+                // err = &feedgen.PageContentFetchError{url}
+				description = "<pre>" + string(body) + "</pre>"
             } else {
                 err = &feedgen.PageContentNotFoundError{url}
+				return
             }
-            return
-        }
-        description = "<pre>" + string(match[1]) + "</pre>"
+
+        } else {
+			description = "<pre>" + string(match[1]) + "</pre>"
+		}
     } else {
         author = string(match[1])
         board = string(match[3])
