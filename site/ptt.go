@@ -63,15 +63,15 @@ func (parser PttParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed, er
         match = body
     }
 
+	var feedItems []*feeds.Item
+
     re = regexp.MustCompile(fmt.Sprintf(`<a href="(/bbs/%s/M\..+?\.html)">`, boardName))
     matchGroup := re.FindAllSubmatch(match, -1)
     feedItemsCount := len(matchGroup)
     if feedItemsCount == 0 {
-        err = &feedgen.ItemFetchError{url}
         return
     }
 
-    var feedItems []*feeds.Item
     for _, m := range matchGroup {
         url := "https://www.ptt.cc" + string(m[1])
 
