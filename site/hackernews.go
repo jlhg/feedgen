@@ -58,7 +58,7 @@ func (parser HackernewsParser) GetBestFeed() (feed *feeds.Feed, err error) {
         return
     }
 
-    re := regexp.MustCompile(`(?s)<td class="title"><a href="(.+?)" class="storylink">(.+?)</a>.+?<span class="score" id=".+?">(\d+?) points</span>.+?by <a href=".+?" class="hnuser">(.+?)</a>.+?(\d+?) (days?|hours?|minutes?) ago.+?<a href="(.+?)">(\d+?)&nbsp;comments</a>`)
+    re := regexp.MustCompile(`(?s)<td class="title"><a href="(.+?)" class="(storylink|titlelink)">(.+?)</a>.+?<span class="score" id=".+?">(\d+?) points</span>.+?by <a href=".+?" class="hnuser">(.+?)</a>.+?(\d+?) (days?|hours?|minutes?) ago.+?<a href="(.+?)">(\d+?)&nbsp;comments</a>`)
     matchGroup := re.FindAllSubmatch(body, -1)
     if len(matchGroup) == 0 {
         err = &feedgen.ItemFetchError{url}
@@ -67,13 +67,13 @@ func (parser HackernewsParser) GetBestFeed() (feed *feeds.Feed, err error) {
 
     for _, m := range matchGroup {
         itemLink := string(m[1])
-        itemTitle := string(m[2])
-        itemPoint := string(m[3])
-        itemAuthor := string(m[4])
-        itemBeforeTime := string(m[5])
-        itemBeforeTimeUnit := string(m[6])
-        itemCommentPath := string(m[7])
-        itemCommentCount := string(m[8])
+        itemTitle := string(m[3])
+        itemPoint := string(m[4])
+        itemAuthor := string(m[5])
+        itemBeforeTime := string(m[6])
+        itemBeforeTimeUnit := string(m[7])
+        itemCommentPath := string(m[8])
+        itemCommentCount := string(m[9])
         itemCommentLink := fmt.Sprintf("https://news.ycombinator.com/%s", itemCommentPath)
         itemDescription := fmt.Sprintf("%s points. <a href=\"%s\" >%s comments</a>", itemPoint, itemCommentLink, itemCommentCount)
         created := now
