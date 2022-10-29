@@ -51,7 +51,7 @@ func cache(client *redis.Client) gin.HandlerFunc {
 		c.Next()
 
 		if c.Writer.Status() == http.StatusOK {
-			err := client.Set(reqURL, blw.body.String(), time.Minute).Err()
+			err := client.Set(reqURL, blw.body.String(), 10*time.Minute).Err()
 			if err != nil {
 				panic(err)
 			}
