@@ -66,6 +66,9 @@ func (parser HackernewsParser) GetBestFeed() (feed *feeds.Feed, err error) {
 	}
 
 	for _, m := range matchGroup {
+		var itemPointDesc string
+		var itemCommentDesc string
+
 		itemLink := string(m[1])
 		itemTitle := string(m[2])
 		itemPoint := string(m[3])
@@ -75,7 +78,19 @@ func (parser HackernewsParser) GetBestFeed() (feed *feeds.Feed, err error) {
 		itemCommentPath := string(m[7])
 		itemCommentCount := string(m[8])
 		itemCommentLink := fmt.Sprintf("https://news.ycombinator.com/%s", itemCommentPath)
-		itemDescription := fmt.Sprintf("%s points. <a href=\"%s\" >%s comments</a>", itemPoint, itemCommentLink, itemCommentCount)
+
+		if itemPoint == "1" {
+			itemPointDesc = fmt.Sprintf("%s point", itemPoint)
+		} else {
+			itemPointDesc = fmt.Sprintf("%s points", itemPoint)
+		}
+
+		if itemCommentCount == "1" {
+			itemCommentDesc = fmt.Sprintf("%s comment", itemCommentCount)
+		} else {
+			itemCommentDesc = fmt.Sprintf("%s comments", itemCommentCount)
+		}
+		itemDescription := fmt.Sprintf("%s. <a href=\"%s\" >%s</a>", itemPointDesc, itemCommentLink, itemCommentDesc)
 		created := now
 
 		if strings.Contains(itemBeforeTimeUnit, "day") {
