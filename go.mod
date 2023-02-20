@@ -3,7 +3,7 @@ module github.com/jlhg/feedgen
 go 1.19
 
 require (
-	github.com/gin-gonic/gin v1.7.4
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
 	github.com/gorilla/feeds v1.1.1
 	golang.org/x/sys v0.1.0 // indirect
