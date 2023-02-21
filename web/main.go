@@ -115,9 +115,10 @@ func setRouter() *gin.Engine {
 		c.Redirect(http.StatusTemporaryRedirect, "https://github.com/jlhg/feedgen")
 	})
 
-	r.GET("/ptt", route(&site.PttParser{}))
-	r.GET("/hackernews", route(&site.HackernewsParser{}))
+	r.GET("/chrb", route(&site.ChrbParser{}))
 	r.GET("/gamer_forum", route(&site.GamerForumParser{}))
+	r.GET("/hackernews", route(&site.HackernewsParser{}))
+	r.GET("/ptt", route(&site.PttParser{}))
 	r.GET("/udn_game", route(&site.UdnGameParser{}))
 
 	return r
