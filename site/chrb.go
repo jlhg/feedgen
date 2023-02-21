@@ -65,7 +65,7 @@ func (parser ChrbParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed, e
 		layout := m[9]     // 格局
 		age := m[10]       // 屋齡
 		itemDescription := fmt.Sprintf(
-			"地址: %s\n用途: %s\n總樓層: %s\n租金: %s\n坪數: %s\n格局: %s\n屋齡: %s\n更新日期: %s\n",
+			"地址: %s<br>用途: %s<br>總樓層: %s<br>租金: %s<br>坪數: %s<br>格局: %s<br>屋齡: %s<br>更新日期: %s",
 			address, purpose, floor, price, size, layout, age, editedDate,
 		)
 
