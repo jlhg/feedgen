@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"sort"
 	"time"
 
 	"github.com/gorilla/feeds"
@@ -83,6 +84,10 @@ func (parser PttParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed, er
 
 		feedItems = append(feedItems, feedItem)
 	}
+
+	sort.Slice(feedItems, func(i, j int) bool {
+		return feedItems[i].Created.After(feedItems[j].Created)
+	})
 
 	for _, feedItem := range feedItems {
 		feed.Add(feedItem)
