@@ -140,6 +140,8 @@ func (parser PttParser) GetFeedItem(url string) (feedItem *feeds.Item, err error
 		const timeForm = "Mon Jan 2 15:04:05 2006"
 		date := string(match[6])
 		created, _ = time.Parse(timeForm, date)
+		loc, _ := time.LoadLocation("Asia/Taipei")
+		created = created.In(loc)
 		content := string(match[7])
 		content = regexp.MustCompile(`(?s)<div class="richcontent"><blockquote.+?</script></div>`).ReplaceAllString(content, "")
 		content = regexp.MustCompile(`(?s)<div class="richcontent"><div class="resize-container"><div class="resize-content"><iframe.+</iframe></div></div></div>`).ReplaceAllString(content, "")
