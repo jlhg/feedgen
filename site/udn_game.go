@@ -4,26 +4,34 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/gorilla/feeds"
-	"golang.org/x/exp/slices"
 
 	"github.com/jlhg/feedgen"
 )
 
 type UdnGameData struct {
-	Articles map[string]UdnGameArticles `json:"articles"`
+	Articles []UdnGameArticles `json:"lists"`
 }
 
 type UdnGameArticles struct {
-	ArtTitle      string `json:"art_title"`
-	ArtAuthorName string `json:"art_author_name"`
-	Summary       string `json:"summary"`
-	Link          string `json:"link"`
-	ArtTime       int64  `json:"art_time"`
+	Title     string               `json:"title"`
+	Author    UdnGameArticleAuthor `json:"author"`
+	Paragraph string               `json:"paragraph"`
+	Url       string               `json:"url"`
+	Time      UdnGameArticleTime   `json:"time"`
+}
+
+type UdnGameArticleAuthor struct {
+	Title string `json:"title"`
+}
+
+type UdnGameArticleTime struct {
+	DateTime  string `json:"dateTime"`
+	Date      string `json:"date"`
+	Timestamp int64  `json:"timestamp"`
 }
 
 // UdnGameParser is a parser for 遊戲角落 (https://game.udn.com/rank/newest/2003).
@@ -43,11 +51,11 @@ func (parser UdnGameParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed
 		switch by {
 		case "newest":
 			sourceLink = "https://game.udn.com/rank/newest/2003"
-			rawLink = "https://game.udn.com/rank/ajax_newest/2003/0/1"
+			rawLink = "https://game.udn.com/game/load/article/newest/?limit=20&time=&fl=author,view,photo,cate,hash"
 			subTitle = "最新文章"
 		case "pv":
 			sourceLink = "https://game.udn.com/rank/pv/2003"
-			rawLink = "https://game.udn.com/rank/ajax_pv/2003/0/2"
+			rawLink = "https://game.udn.com/game/load/article/trend/?limit=20&time=7in30&fl=author,view,photo,cate,hash"
 			subTitle = "最多瀏覽"
 		default:
 			err = &feedgen.ParameterValueInvalidError{"by"}
@@ -85,42 +93,25 @@ func (parser UdnGameParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed
 		return
 	}
 
-	keys := []int{}
-
-	for k := range data.Articles {
-		var i int
-		i, err = strconv.Atoi(k)
-		if err != nil {
-			return
-		}
-
-		keys = append(keys, i)
-	}
-
-	slices.Sort(keys)
-
-	for _, i := range keys {
+	for _, article := range data.Articles {
 		var created time.Time
 
-		a := fmt.Sprintf("%d", i)
-		article := data.Articles[a]
-
-		switch feedgen.CountDigits(article.ArtTime) {
+		switch feedgen.CountDigits(article.Time.Timestamp) {
 		case 10:
-			created = time.Unix(article.ArtTime, 0)
+			created = time.Unix(article.Time.Timestamp, 0)
 		case 13:
-			created = time.UnixMilli(article.ArtTime)
+			created = time.UnixMilli(article.Time.Timestamp)
 		default:
 			err = &feedgen.ItemFetchError{rawLink}
 			return
 		}
 
 		feedItem := &feeds.Item{
-			Id:          article.Link,
-			Title:       article.ArtTitle,
-			Link:        &feeds.Link{Href: article.Link},
-			Description: article.Summary,
-			Author:      &feeds.Author{Name: article.ArtAuthorName},
+			Id:          article.Url,
+			Title:       article.Title,
+			Link:        &feeds.Link{Href: article.Url},
+			Description: article.Paragraph,
+			Author:      &feeds.Author{Name: article.Author.Title},
 			Created:     created,
 		}
 
