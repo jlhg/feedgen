@@ -32,8 +32,6 @@ func (parser ChrbParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed, e
 		return
 	}
 
-	fmt.Println(string(body))
-
 	title := "大管家房屋網"
 
 	feed = &feeds.Feed{

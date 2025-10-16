@@ -47,7 +47,7 @@ func (parser HackmdParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed,
 	sourceLink := fmt.Sprintf("https://hackmd.io/%s", username)
 
 	feed = &feeds.Feed{
-		Title:       fmt.Sprintf("HackMD - %s", username),
+		Title:       fmt.Sprintf("%s | HackMD", username),
 		Link:        &feeds.Link{Href: sourceLink},
 		Description: fmt.Sprintf("Latest published notes from %s on HackMD", username),
 		Author:      &feeds.Author{Name: username},
@@ -82,7 +82,7 @@ func (parser HackmdParser) GetFeed(query feedgen.QueryValues) (feed *feeds.Feed,
 	// Convert notes to feed items
 	for _, note := range data.Notes {
 		// Construct note URL
-		noteURL := fmt.Sprintf("https://hackmd.io/%s/%s", note.Userpath, note.ShortID)
+		noteURL := fmt.Sprintf("https://hackmd.io/%s/%s", username, note.ShortID)
 
 		feedItem := &feeds.Item{
 			Id:          noteURL,
