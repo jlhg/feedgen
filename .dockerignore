@@ -1,6 +1,42 @@
+# Version control
 .git/
 .gitignore
+.gitattributes
+
+# Docker
 .dockerignore
-bin/
-log/
-srv/
+docker-compose.yml
+docker-compose*.yml
+Dockerfile
+
+# Build artifacts
+/bin/
+*.exe
+
+# Logs and data
+/log/
+.srv/
+/tmp/
+
+# Documentation
+README.md
+*.md
+LICENSE
+
+# IDE settings
+.idea/
+.vscode/
+.editorconfig
+
+# Environment files
+.env
+.env.*
+
+# Secrets
+.secrets/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
+.travis.yml

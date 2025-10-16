@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"log"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v7"
+	"github.com/redis/go-redis/v9"
 	"github.com/gorilla/feeds"
 
 	"github.com/jlhg/feedgen"
@@ -39,8 +40,9 @@ func cache(client *redis.Client) gin.HandlerFunc {
 		blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
 		c.Writer = blw
 
+		ctx := context.Background()
 		reqURL := c.Request.URL.String()
-		feedText, err := client.Get(reqURL).Result()
+		feedText, err := client.Get(ctx, reqURL).Result()
 		if err == nil {
 			c.Header("Content-Type", "application/atom+xml; charset=utf-8")
 			c.String(http.StatusOK, feedText)
@@ -51,7 +53,7 @@ func cache(client *redis.Client) gin.HandlerFunc {
 		c.Next()
 
 		if c.Writer.Status() == http.StatusOK {
-			err := client.Set(reqURL, blw.body.String(), 10*time.Minute).Err()
+			err := client.Set(ctx, reqURL, blw.body.String(), 10*time.Minute).Err()
 			if err != nil {
 				panic(err)
 			}
@@ -107,7 +109,11 @@ func setRouter() *gin.Engine {
 		}
 	}
 	if redisHost != "" {
-		client := redis.NewClient(&redis.Options{Addr: redisHost, Password: redisPassword, DB: redisDB})
+		client := redis.NewClient(&redis.Options{
+			Addr:     redisHost,
+			Password: redisPassword,
+			DB:       redisDB,
+		})
 		r.Use(cache(client))
 	}
 

@@ -1,0 +1,46 @@
+services:
+  web:
+    build: .
+    depends_on:
+      valkey:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./.srv/log:/app/log
+    ports:
+      - "8080:8080"
+    environment:
+      - FG_REDIS_HOST=valkey:6379
+      - FG_REDIS_PASSWORD=
+      - FG_REDIS_DB=0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  valkey:
+    image: valkey/valkey:8
+    restart: unless-stopped
+    volumes:
+      - ./.srv/valkey:/data
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   restart: no
+  #   command: tunnel run --token-file /run/secrets/cf_tunnel_token
+  #   secrets:
+  #     - cf_tunnel_token
+
+# secrets:
+#   cf_tunnel_token:
+#     file: ./.secrets/cf_tunnel_token

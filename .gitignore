@@ -1,4 +1,39 @@
+# Build artifacts
 /bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+*.out
+
+# Dependency directories
+vendor/
+
+# Log files
 /log/
-/srv/
+*.log
+
+# Service/data directories
+.srv/
 /tmp/
+
+# Go workspace files
+go.work
+
+# IDE settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.env
+.env.local
+
+# Secrets
+.secrets/
