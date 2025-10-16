@@ -118,6 +118,7 @@ func setRouter() *gin.Engine {
 	r.GET("/chrb", route(&site.ChrbParser{}))
 	r.GET("/gamer_forum", route(&site.GamerForumParser{}))
 	r.GET("/hackernews", route(&site.HackernewsParser{}))
+	r.GET("/hackmd", route(&site.HackmdParser{}))
 	r.GET("/ptt", route(&site.PttParser{}))
 	r.GET("/udn_game", route(&site.UdnGameParser{}))
 
